@@ -9,7 +9,8 @@ const {
   selectedCategories,
   selectedTRLs,
   selectedYears,
-  filteredProjects, 
+  filteredProjects,
+  totalProjectCount, 
   availableStatuses,
   allCategories,
   allTRLs,
@@ -71,7 +72,7 @@ const toggleYear = (year) => {
     <header class="overview-header">
       <div class="header-content">
         <h1>Projects Overview</h1>
-        <p class="subtitle">Browse and discover our current and past projects</p>
+        <p class="subtitle">Browse and discover our {{ totalProjectCount }} current and past projects</p>
       </div>
     </header>
 

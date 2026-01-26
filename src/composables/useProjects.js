@@ -101,23 +101,31 @@ export const filteredProjects = computed(() => {
     const matchesTRL = selectedTRLs.value.length === 0 || (() => {
       const start = parseInt(project.trl_start)
       const end = parseInt(project.trl_end)
-      if (isNaN(start) || isNaN(end)) return false
+      // If TRL values are missing, show the project anyway
+      if (isNaN(start) || isNaN(end)) return true
       
       return selectedTRLs.value.some(trl => trl >= start && trl <= end)
     })()
     
     // Check if project's year range includes any of the selected years
     const matchesYear = selectedYears.value.length === 0 || (() => {
-      if (!project.date_start || !project.date_end) return false
+      if (!project.date_start || !project.date_end) return true
       const startYear = parseInt(project.date_start.split('/')[2])
       const endYear = parseInt(project.date_end.split('/')[2])
-      if (isNaN(startYear) || isNaN(endYear)) return false
+      if (isNaN(startYear) || isNaN(endYear)) return true
       
       return selectedYears.value.some(year => year >= startYear && year <= endYear)
     })()
     
     return matchesSearch && matchesStatus && matchesCategory && matchesTRL && matchesYear
   })
+})
+
+/**
+ * Get total count of projects (with non-empty timestamp)
+ */
+export const totalProjectCount = computed(() => {
+  return projects.value.length
 })
 
 /**
@@ -141,6 +149,7 @@ export function useProjects() {
     selectedTRLs,
     selectedYears,
     filteredProjects,
+    totalProjectCount,
     availableStatuses,
     allCategories,
     allTRLs,
