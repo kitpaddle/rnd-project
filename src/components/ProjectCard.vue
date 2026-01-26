@@ -1,5 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router'
+import { useProjects } from '../composables/useProjects'
 
 const props = defineProps({
   project: {
@@ -9,6 +10,7 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const { allCategories } = useProjects()
 
 const openProject = () => {
   router.push({ name: 'ProjectDetail', params: { id: props.project.id } })
@@ -38,18 +40,6 @@ const truncate = (text, length = 400) => {
   return text.length > length ? text.substring(0, length) + '...' : text
 }
 
-const allCategories = [
-  'Air - Ground Integration',
-  'Cybersecurity and Virtualisation',
-  'Improve Environmental Footprint',
-  'Civil and Military Synergies',
-  'Automation and Connected Systems for ATM',
-  'AI in Aviation',
-  'Multimodality and Passenger Experience',
-  'U-Space and UAM',
-  'Aviation Capacity and Flexibility'
-]
-
 const matchesCategory = (cat, projectCategory) => {
   if (!projectCategory) return false
   // Handle both exact matches and comma-separated category lists
@@ -60,7 +50,8 @@ const matchesCategory = (cat, projectCategory) => {
 const getActiveCategories = (projectCategory) => {
   if (!projectCategory) return []
   const categories = projectCategory.split(',').map(c => c.trim())
-  return categories.filter(cat => allCategories.includes(cat))
+  // Show all categories, don't filter them
+  return categories
 }
 </script>
 

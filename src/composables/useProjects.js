@@ -33,7 +33,9 @@ export async function loadProjects() {
     const categories = new Set()
     projects.value.forEach(project => {
       if (project.category) {
-        categories.add(project.category)
+        // Split by comma in case there are multiple categories
+        const cats = project.category.split(',').map(c => c.trim()).filter(c => c !== '')
+        cats.forEach(cat => categories.add(cat))
       }
     })
     allCategories.value = Array.from(categories).sort()

@@ -1,8 +1,10 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import ProjectCard from '../components/ProjectCard.vue'
 import { useProjects } from '../composables/useProjects'
 
+const router = useRouter()
 const { 
   searchQuery, 
   selectedStatus, 
@@ -74,6 +76,9 @@ const toggleYear = (year) => {
         <h1>Projects Overview</h1>
         <p class="subtitle">Browse and discover our {{ totalProjectCount }} current and past projects</p>
       </div>
+      <button class="view-toggle-btn" @click="router.push('/categories')" title="View category network">
+        Category Network
+      </button>
     </header>
 
     <div class="controls-section">
@@ -217,8 +222,16 @@ const toggleYear = (year) => {
 }
 
 .overview-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
   margin-bottom: 40px;
+}
+
+.header-content {
+  flex: 1;
+  text-align: left;
 }
 
 .header-content h1 {
@@ -231,7 +244,25 @@ const toggleYear = (year) => {
 .subtitle {
   margin: 8px 0 0 0;
   font-size: 16px;
-  color: #666;
+  color: #888;
+}
+
+.view-toggle-btn {
+  padding: 10px 20px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+.view-toggle-btn:hover {
+  background: #1976d2;
 }
 
 .controls-section {
