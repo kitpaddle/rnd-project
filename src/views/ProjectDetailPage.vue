@@ -54,8 +54,13 @@ const goBack = () => {
 
     <div class="detail-content">
       <section class="section">
-        <h2>Summary</h2>
-        <p class="summary-text">{{ project.summary_long || project.summary_short }}</p>
+        <h2>{{ (project.status === 'proposal' || project.status === 'ongoing') ? 'Concept & Background' : 'Concept & Background' }}</h2>
+        <p class="summary-text">{{ project.intro_long || project.intro_short }}</p>
+      </section>
+
+      <section class="section" v-if="project.status === 'completed' || project.status === 'cancelled'">
+        <h2>Result Summary</h2>
+        <p class="summary-text">{{ project.project_results || 'No results available' }}</p>
       </section>
 
       <section class="section" v-if="project.category">
@@ -64,7 +69,7 @@ const goBack = () => {
       </section>
 
       <section class="section">
-        <h2>Timeline</h2>
+        <h2>{{ (project.status === 'proposal' || project.status === 'ongoing') ? 'Planned Timeline' : 'Timeline' }}</h2>
         <p>{{ formatDate(project.date_start) }} - {{ formatDate(project.date_end) }}</p>
       </section>
 

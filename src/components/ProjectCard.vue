@@ -76,7 +76,7 @@ const getActiveCategories = (projectCategory) => {
       </span>
     </div>
 
-    <p class="project-summary">{{ truncate(project.summary_short, 400) }}</p>
+    <p class="project-summary">{{ truncate(project.intro_short, 400) }}</p>
 
     <div class="card-categories" v-if="getActiveCategories(project.category).length > 0">
       <span 

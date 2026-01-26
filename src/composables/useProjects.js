@@ -88,7 +88,7 @@ export const filteredProjects = computed(() => {
     const matchesSearch = 
       project.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       project.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      project.summary_short.toLowerCase().includes(searchQuery.value.toLowerCase())
+      project.intro_short.toLowerCase().includes(searchQuery.value.toLowerCase())
     
     const matchesStatus = !selectedStatus.value || project.status === selectedStatus.value
     
