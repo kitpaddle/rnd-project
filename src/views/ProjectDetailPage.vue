@@ -31,6 +31,10 @@ const getStatusColor = (status) => {
   return colors[status] || '#999'
 }
 
+const getCategoryList = (categoryStr) => {
+  return categoryStr.split(',').map(c => c.trim()).filter(c => c !== '')
+}
+
 const goBack = () => {
   router.back()
 }
@@ -38,7 +42,11 @@ const goBack = () => {
 
 <template>
   <div class="project-detail-page" v-if="project">
-    <button class="back-btn" @click="goBack">← Back</button>
+    <nav class="breadcrumb">
+      <button class="breadcrumb-link" @click="goBack">Project Overview</button>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-current">{{ project.name }}</span>
+    </nav>
 
     <div class="detail-header">
       <div class="header-top">
@@ -48,6 +56,11 @@ const goBack = () => {
         </div>
         <span class="status-badge" :style="{ backgroundColor: getStatusColor(project.status) }">
           {{ project.status }}
+        </span>
+      </div>
+      <div class="header-categories" v-if="project.category">
+        <span v-for="cat in getCategoryList(project.category)" :key="cat" class="category-tag">
+          {{ cat }}
         </span>
       </div>
     </div>
@@ -61,11 +74,6 @@ const goBack = () => {
       <section class="section" v-if="project.status === 'completed' || project.status === 'cancelled'">
         <h2>Result Summary</h2>
         <p class="summary-text">{{ project.project_results || 'No results available' }}</p>
-      </section>
-
-      <section class="section" v-if="project.category">
-        <h2>Category</h2>
-        <p>{{ project.category }}</p>
       </section>
 
       <section class="section">
@@ -83,7 +91,7 @@ const goBack = () => {
         <p>👤 {{ project.contact }}</p>
       </section>
 
-      <section class="section" v-if="project.funding">
+      <section class="section" v-if="project.funding && project.status !== 'proposal'">
         <h2>Funding</h2>
         <p>{{ project.funding }}</p>
       </section>
@@ -103,6 +111,41 @@ const goBack = () => {
   padding: 40px 24px;
 }
 
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  margin-top: -8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.breadcrumb-link {
+  background: none;
+  border: none;
+  color: #2196f3;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+  color: #1976d2;
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: #ccc;
+}
+
+.breadcrumb-current {
+  color: #666;
+  font-weight: 500;
+}
+
 .back-btn {
   background: none;
   border: none;
@@ -120,7 +163,7 @@ const goBack = () => {
 }
 
 .detail-header {
-  margin-bottom: 48px;
+  margin-bottom: 40px;
 }
 
 .header-top {
@@ -128,6 +171,23 @@ const goBack = () => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
+  margin-bottom: 12px;
+}
+
+.header-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-tag {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .project-name {

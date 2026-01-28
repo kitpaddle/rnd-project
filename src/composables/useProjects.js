@@ -5,7 +5,7 @@ const projects = ref([])
 const isLoading = ref(false)
 const error = ref(null)
 const searchQuery = ref('')
-const selectedStatus = ref(null)
+const selectedStatus = ref([])
 const selectedCategories = ref([])
 const selectedTRLs = ref([])
 const selectedYears = ref([])
@@ -68,7 +68,8 @@ export async function loadProjects() {
     })
     allYears.value = Array.from(years).sort((a, b) => a - b)
     
-    // Select all categories, TRLs, and years by default
+    // Select all statuses, categories, TRLs, and years by default
+    selectedStatus.value = [...availableStatuses.value]
     selectedCategories.value = [...allCategories.value]
     selectedTRLs.value = [...allTRLs.value]
     selectedYears.value = [...allYears.value]
@@ -92,7 +93,7 @@ export const filteredProjects = computed(() => {
       project.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       project.intro_short.toLowerCase().includes(searchQuery.value.toLowerCase())
     
-    const matchesStatus = !selectedStatus.value || project.status === selectedStatus.value
+    const matchesStatus = selectedStatus.value.length === 0 || selectedStatus.value.includes(project.status) || !project.status || project.status.trim() === ''
     
     const matchesCategory = selectedCategories.value.length === 0 || 
       selectedCategories.value.some(cat => 
@@ -131,10 +132,10 @@ export const totalProjectCount = computed(() => {
 })
 
 /**
- * Get unique statuses for filter options
+ * Get unique statuses for filter options (exclude blank/empty statuses)
  */
 export const availableStatuses = computed(() => {
-  return [...new Set(projects.value.map(p => p.status))].sort()
+  return [...new Set(projects.value.map(p => p.status).filter(status => status && status.trim() !== ''))].sort()
 })
 
 /**

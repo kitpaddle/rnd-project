@@ -153,19 +153,17 @@ const getActiveCategories = (projectCategory) => {
 .card-categories {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .category-tag {
   display: inline-block;
-  padding: 2px 4px;
-  background: #0052cc;
-  color: white;
-  border-radius: 2px;
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.2px;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .card-info {
@@ -201,22 +199,7 @@ const getActiveCategories = (projectCategory) => {
   white-space: nowrap;
 }
 
-.category-row {
-  display: flex;
-  gap: 8px;
-}
 
-.category-tag {
-  display: inline-block;
-  padding: 3px 8px;
-  background: #e8eef7;
-  color: #0052cc;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
 
 /* CSS Variables for status colors */
 :root {

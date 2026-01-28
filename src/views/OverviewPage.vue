@@ -22,6 +22,7 @@ const {
 } = useProjects()
 
 const categoryDropdownOpen = ref(false)
+const statusDropdownOpen = ref(false)
 const trlDropdownOpen = ref(false)
 const yearDropdownOpen = ref(false)
 
@@ -31,10 +32,11 @@ onMounted(() => {
 
 const clearFilters = () => {
   searchQuery.value = ''
-  selectedStatus.value = null
+  selectedStatus.value = [...availableStatuses.value]
   selectedCategories.value = [...allCategories.value]
   selectedTRLs.value = [...allTRLs.value]
   selectedYears.value = [...allYears.value]
+  statusDropdownOpen.value = false
   categoryDropdownOpen.value = false
   trlDropdownOpen.value = false
   yearDropdownOpen.value = false
@@ -67,6 +69,15 @@ const toggleYear = (year) => {
     selectedYears.value.push(year)
   }
 }
+
+const toggleStatus = (status) => {
+  const index = selectedStatus.value.indexOf(status)
+  if (index > -1) {
+    selectedStatus.value.splice(index, 1)
+  } else {
+    selectedStatus.value.push(status)
+  }
+}
 </script>
 
 <template>
@@ -76,9 +87,14 @@ const toggleYear = (year) => {
         <h1>Projects Overview</h1>
         <p class="subtitle">Browse and discover our {{ totalProjectCount }} current and past projects</p>
       </div>
-      <button class="view-toggle-btn" @click="router.push('/categories')" title="View category network">
-        Category Network
-      </button>
+      <div class="header-buttons">
+        <button class="view-toggle-btn" @click="router.push('/categories')" title="View category network">
+          Category Network
+        </button>
+        <button class="view-toggle-btn" @click="router.push('/trl-heatmap')" title="View TRL heatmap">
+          TRL Heatmap
+        </button>
+      </div>
     </header>
 
     <div class="controls-section">
@@ -93,12 +109,30 @@ const toggleYear = (year) => {
 
       <div class="filters">
         <div class="filter-group">
-          <select v-model="selectedStatus" id="status-filter" class="filter-select">
-            <option :value="null">All Statuses</option>
-            <option v-for="status in availableStatuses" :key="status" :value="status">
-              {{ status }}
-            </option>
-          </select>
+          <div class="category-dropdown-wrapper">
+            <button 
+              type="button"
+              class="dropdown-trigger"
+              @click="statusDropdownOpen = !statusDropdownOpen"
+            >
+              <span v-if="selectedStatus.length === 0">All Statuses</span>
+              <span v-else-if="selectedStatus.length === availableStatuses.length">All Statuses</span>
+              <span v-else>{{ selectedStatus.length }} selected</span>
+              <span class="dropdown-arrow" :class="{ open: statusDropdownOpen }">▼</span>
+            </button>
+            <div v-show="statusDropdownOpen" class="dropdown-menu">
+              <div v-for="status in availableStatuses" :key="status" class="dropdown-item">
+                <input
+                  type="checkbox"
+                  :id="`status-${status}`"
+                  :checked="selectedStatus.includes(status)"
+                  @change="toggleStatus(status)"
+                  class="dropdown-checkbox"
+                />
+                <label :for="`status-${status}`" class="dropdown-label">{{ status }}</label>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="filter-group">
@@ -183,7 +217,7 @@ const toggleYear = (year) => {
         </div>
 
         <button 
-          v-if="searchQuery || selectedStatus || selectedCategories.length < allCategories.length || selectedTRLs.length < allTRLs.length || selectedYears.length < allYears.length" 
+          v-if="searchQuery || selectedStatus.length < availableStatuses.length || selectedCategories.length < allCategories.length || selectedTRLs.length < allTRLs.length || selectedYears.length < allYears.length" 
           @click="clearFilters"
           class="clear-filters-btn"
         >
@@ -247,9 +281,15 @@ const toggleYear = (year) => {
   color: #888;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
 .view-toggle-btn {
   padding: 10px 20px;
-  background: #2196f3;
+  background: #607d8b;
   color: white;
   border: none;
   border-radius: 6px;
@@ -262,7 +302,7 @@ const toggleYear = (year) => {
 }
 
 .view-toggle-btn:hover {
-  background: #1976d2;
+  background: #455a64;
 }
 
 .controls-section {
@@ -283,6 +323,7 @@ const toggleYear = (year) => {
   border: 1px solid #ddd;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
   transition: border-color 0.3s ease;
 }
 

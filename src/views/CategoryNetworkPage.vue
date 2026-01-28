@@ -261,13 +261,16 @@ const filterByCategory = (category) => {
 
 <template>
   <div class="category-network-container">
-    <header class="network-header">
-      <button class="back-btn" @click="goBack">← Back</button>
-      <div class="header-content">
-        <h1>Category Network</h1>
-        <p class="subtitle">Explore project categories and their relationships</p>
-      </div>
-    </header>
+    <nav class="breadcrumb">
+      <button class="breadcrumb-link" @click="goBack">Project Overview</button>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-current">Category Network</span>
+    </nav>
+
+    <div class="header-content">
+      <h1>Category Network</h1>
+      <p class="subtitle">Explore project categories and their relationships</p>
+    </div>
 
     <svg 
       ref="svgContainer"
@@ -346,11 +349,39 @@ const filterByCategory = (category) => {
   padding: 40px 24px;
 }
 
-.network-header {
+.breadcrumb {
   display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 32px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  margin-top: -8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.breadcrumb-link {
+  background: none;
+  border: none;
+  color: #2196f3;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+  color: #1976d2;
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: #ccc;
+}
+
+.breadcrumb-current {
+  color: #666;
+  font-weight: 500;
 }
 
 .back-btn {
@@ -361,16 +392,20 @@ const filterByCategory = (category) => {
   font-size: 14px;
   font-weight: 500;
   padding: 8px 12px;
+  margin-bottom: 32px;
   transition: color 0.2s ease;
-  margin-top: 4px;
 }
 
 .back-btn:hover {
   color: #1976d2;
 }
 
+.header-content {
+  margin-bottom: 40px;
+}
+
 .header-content h1 {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
   color: #222;
   margin: 0 0 8px 0;
@@ -380,6 +415,14 @@ const filterByCategory = (category) => {
   font-size: 16px;
   color: #888;
   margin: 0;
+}
+
+.network-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 32px;
 }
 
 .network-info {

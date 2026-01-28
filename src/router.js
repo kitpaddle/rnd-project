@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import OverviewPage from './views/OverviewPage.vue'
 import ProjectDetailPage from './views/ProjectDetailPage.vue'
 import CategoryNetworkPage from './views/CategoryNetworkPage.vue'
+import TRLHeatmapPage from './views/TRLHeatmapPage.vue'
 
 const routes = [
   {
@@ -18,6 +19,11 @@ const routes = [
     path: '/categories',
     name: 'CategoryNetwork',
     component: CategoryNetworkPage
+  },
+  {
+    path: '/trl-heatmap',
+    name: 'TRLHeatmap',
+    component: TRLHeatmapPage
   }
 ]
 
