@@ -4,27 +4,33 @@ import { useRouter } from 'vue-router'
 import { useProjects } from '../composables/useProjects'
 
 const router = useRouter()
-const { projects, loadProjects, allYears } = useProjects()
+const { projects, loadProjects, allYears, availableStatuses } = useProjects()
 
 onMounted(() => {
   loadProjects()
 })
 
-// Create a matrix of TRL levels (1-9) by years
+// Create a matrix of TRL levels (1-9) by years with status tracking
 const heatmapData = computed(() => {
   const years = allYears.value
   const trlLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  const statuses = availableStatuses.value
   
-  // Initialize matrix with zeros
+  // Initialize matrix with objects containing status counts
   const matrix = {}
   trlLevels.forEach(trl => {
     matrix[trl] = {}
     years.forEach(year => {
-      matrix[trl][year] = 0
+      const cellData = { total: 0 }
+      // Dynamically add status counts based on actual statuses
+      statuses.forEach(status => {
+        cellData[status] = 0
+      })
+      matrix[trl][year] = cellData
     })
   })
   
-  // Count projects for each TRL/year combination
+  // Count projects for each TRL/year combination, tracking by status
   projects.value.forEach(project => {
     const trlStart = parseInt(project.trl_start)
     const trlEnd = parseInt(project.trl_end)
@@ -40,7 +46,11 @@ const heatmapData = computed(() => {
           for (let trl = trlStart; trl <= trlEnd; trl++) {
             for (let year = startYear; year <= endYear; year++) {
               if (years.includes(year) && trl >= 1 && trl <= 9) {
-                matrix[trl][year]++
+                matrix[trl][year].total++
+                const status = project.status || 'unknown'
+                if (status in matrix[trl][year]) {
+                  matrix[trl][year][status]++
+                }
               }
             }
           }
@@ -49,31 +59,73 @@ const heatmapData = computed(() => {
     }
   })
   
-  return { matrix, trlLevels, years }
+  return { matrix, trlLevels, years, statuses }
 })
 
-// Get the maximum count for color intensity scaling
+// Status colors matching the project status badges
+const statusColorMap = {
+  proposal: '#2196f3',
+  ongoing: '#4caf50',
+  completed: '#9c27b0',
+  cancelled: '#f44336'
+}
+
+// Get color for a specific status
+const getStatusColor = (status) => {
+  return statusColorMap[status] || '#999'
+}
+
+// Get the maximum total count for intensity scaling
 const maxCount = computed(() => {
   let max = 0
   Object.values(heatmapData.value.matrix).forEach(row => {
-    Object.values(row).forEach(count => {
-      if (count > max) max = count
+    Object.values(row).forEach(cell => {
+      if (cell.total > max) max = cell.total
     })
   })
   return max || 1
 })
 
-// Get color based on intensity (0 to maxCount)
-const getHeatColor = (count) => {
-  if (count === 0) return '#f5f5f5'
-  const intensity = count / maxCount.value
+// Get color based on dominant status and intensity
+const getHeatColor = (cellData) => {
+  if (cellData.total === 0) return '#f5f5f5'
   
-  // Gradient from light blue to dark blue
-  if (intensity < 0.25) return '#e3f2fd'
-  if (intensity < 0.5) return '#90caf9'
-  if (intensity < 0.75) return '#42a5f5'
-  if (intensity < 0.9) return '#1e88e5'
-  return '#1565c0'
+  // Find dominant status
+  let dominantStatus = null
+  let statusMax = 0
+  
+  // Check all actual statuses in the data
+  heatmapData.value.statuses.forEach(status => {
+    if (cellData[status] > statusMax) {
+      dominantStatus = status
+      statusMax = cellData[status]
+    }
+  })
+  
+  if (!dominantStatus) return '#f5f5f5'
+  
+  // Get base color for the dominant status
+  const baseColor = getStatusColor(dominantStatus)
+  
+  // Calculate intensity based on total project count relative to max
+  const max = maxCount.value
+  const intensity = cellData.total / max
+  
+  // Map intensity to opacity - more projects = more opaque
+  let opacity = 0.2
+  if (intensity < 0.25) opacity = 0.25
+  else if (intensity < 0.5) opacity = 0.4
+  else if (intensity < 0.75) opacity = 0.6
+  else if (intensity < 0.9) opacity = 0.8
+  else opacity = 1
+  
+  // Convert hex to rgba
+  const hex = baseColor.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
 }
 
 // Project count and statistics
@@ -82,12 +134,18 @@ const projectStats = computed(() => {
     totalProjects: projects.value.length,
     avgTRL: 0,
     avgDuration: 0,
-    projectsByTRL: {}
+    projectsByTRL: {},
+    projectsByTRLAndStatus: {}
   }
   
   // Initialize TRL counts
   for (let i = 1; i <= 9; i++) {
     stats.projectsByTRL[i] = 0
+    stats.projectsByTRLAndStatus[i] = {}
+    // Initialize status counts for each TRL
+    heatmapData.value.statuses.forEach(status => {
+      stats.projectsByTRLAndStatus[i][status] = 0
+    })
   }
   
   let totalTRL = 0
@@ -103,9 +161,13 @@ const projectStats = computed(() => {
       totalTRL += trlStart + trlEnd
       trlCount += 2
       
-      // Count projects at each TRL level
+      // Count projects at each TRL level, tracking by status
       for (let trl = trlStart; trl <= trlEnd; trl++) {
         stats.projectsByTRL[trl]++
+        const status = project.status || 'unknown'
+        if (status in stats.projectsByTRLAndStatus[trl]) {
+          stats.projectsByTRLAndStatus[trl][status]++
+        }
       }
     }
     
@@ -173,10 +235,10 @@ const projectStats = computed(() => {
             :key="`${trl}-${year}`"
             class="heatmap-cell"
             :style="{ backgroundColor: getHeatColor(heatmapData.matrix[trl][year]) }"
-            :title="`${heatmapData.matrix[trl][year]} projects - TRL ${trl}, ${year}`"
+            :title="`${heatmapData.matrix[trl][year].total} projects (P: ${heatmapData.matrix[trl][year].proposal}, O: ${heatmapData.matrix[trl][year].ongoing}, C: ${heatmapData.matrix[trl][year].completed}, Pa: ${heatmapData.matrix[trl][year].paused}) - TRL ${trl}, ${year}`"
           >
-            <span v-if="heatmapData.matrix[trl][year] > 0" class="cell-value">
-              {{ heatmapData.matrix[trl][year] }}
+            <span v-if="heatmapData.matrix[trl][year].total > 0" class="cell-value">
+              {{ heatmapData.matrix[trl][year].total }}
             </span>
           </div>
         </div>
@@ -185,31 +247,44 @@ const projectStats = computed(() => {
 
     <!-- Legend -->
     <div class="legend-section">
-      <h3>Color Intensity Legend</h3>
-      <div class="legend">
-        <div class="legend-item">
-          <div class="legend-color" style="background: #f5f5f5;"></div>
-          <span>0 projects</span>
+      <div style="display: flex; gap: 40px;">
+        <div>
+          <h3>Project Status Colors</h3>
+          <div class="legend">
+            <div v-for="status in heatmapData.statuses" :key="status" class="legend-item">
+              <div class="legend-color" :style="{ backgroundColor: getStatusColor(status) }"></div>
+              <span>{{ status.charAt(0).toUpperCase() + status.slice(1) }}</span>
+            </div>
+          </div>
         </div>
-        <div class="legend-item">
-          <div class="legend-color" style="background: #e3f2fd;"></div>
-          <span>1-25%</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color" style="background: #90caf9;"></div>
-          <span>25-50%</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color" style="background: #42a5f5;"></div>
-          <span>50-75%</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color" style="background: #1e88e5;"></div>
-          <span>75-90%</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color" style="background: #1565c0;"></div>
-          <span>90-100%</span>
+        <div>
+          <h3>Color Intensity (Number of Projects)</h3>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background: #f5f5f5;"></div>
+              <span>0 projects</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: rgba(150, 150, 150, 0.25);"></div>
+              <span>Low (1-25%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: rgba(150, 150, 150, 0.4);"></div>
+              <span>Medium (25-50%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: rgba(150, 150, 150, 0.6);"></div>
+              <span>High (50-75%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: rgba(150, 150, 150, 0.8);"></div>
+              <span>Very High (75-90%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: rgba(150, 150, 150, 1);"></div>
+              <span>Maximum (90-100%)</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -222,13 +297,16 @@ const projectStats = computed(() => {
           <div class="trl-bar-label">TRL {{ trl }}</div>
           <div class="trl-bar-container">
             <div 
-              class="trl-bar-fill"
+              v-for="status in heatmapData.statuses"
+              :key="status"
+              class="trl-bar-segment"
               :style="{ 
-                width: projectStats.totalProjects > 0 
-                  ? (projectStats.projectsByTRL[trl] / projectStats.totalProjects * 100) + '%' 
+                width: projectStats.totalProjects > 0 && projectStats.projectsByTRL[trl] > 0
+                  ? (projectStats.projectsByTRLAndStatus[trl][status] / projectStats.totalProjects * 100) + '%' 
                   : '0%',
-                backgroundColor: getHeatColor(projectStats.projectsByTRL[trl] > 0 ? projectStats.projectsByTRL[trl] : 0)
+                backgroundColor: getStatusColor(status)
               }"
+              :title="`${status}: ${projectStats.projectsByTRLAndStatus[trl][status]}`"
             ></div>
           </div>
           <div class="trl-bar-count">{{ projectStats.projectsByTRL[trl] }}</div>
@@ -428,8 +506,9 @@ const projectStats = computed(() => {
 }
 
 .cell-value {
-  color: #1565c0;
+  color: white;
   font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
 }
 
 .legend-section {
@@ -511,12 +590,13 @@ const projectStats = computed(() => {
   background: #f5f5f5;
   border-radius: 4px;
   overflow: hidden;
+  display: flex;
 }
 
-.trl-bar-fill {
+.trl-bar-segment {
   height: 100%;
-  border-radius: 4px;
   transition: width 0.3s ease;
+  cursor: pointer;
 }
 
 .trl-bar-count {
